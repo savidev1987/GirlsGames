@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Sunny's Daycare</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #fff8e7 0%, #ffecd2 50%, #ffd6a5 100%);
+      font-family: 'Nunito', Arial, sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* ── Top bar ── */
+    #topbar {
+      width: 100%; max-width: 600px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 4px;
+    }
+    #btn-home {
+      background: rgba(255,255,255,0.7); border: 2px solid #f59e0b;
+      color: #92400e; font-size: 13px; font-weight: 800;
+      padding: 5px 12px; border-radius: 20px; text-decoration: none;
+    }
+    #level-badge {
+      font-family: 'Fredoka One', cursive;
+      font-size: 17px; color: #92400e;
+    }
+    #hearts { font-size: 22px; letter-spacing: 2px; }
+
+    /* ── Story banner ── */
+    #story-banner {
+      width: 100%; max-width: 600px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border-radius: 16px; margin: 6px 14px;
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    #story-banner .story-icon { font-size: 28px; flex-shrink: 0; }
+    #story-banner p { font-size: 13px; font-weight: 700; color: #78350f; line-height: 1.4; }
+
+    /* ── Timer bar ── */
+    #timer-section {
+      width: 100%; max-width: 600px;
+      padding: 4px 14px 2px;
+    }
+    #timer-label {
+      font-size: 11px; font-weight: 800; color: #92400e;
+      text-transform: uppercase; margin-bottom: 4px;
+      display: flex; justify-content: space-between;
+    }
+    #timer-bar-bg {
+      width: 100%; height: 16px; background: #fff3;
+      border-radius: 8px; overflow: hidden;
+      border: 2px solid rgba(245,158,11,0.4);
+    }
+    #timer-bar {
+      height: 100%; width: 100%; border-radius: 6px;
+      background: linear-gradient(90deg, #4ade80, #86efac);
+      transition: background 0.5s;
+    }
+
+    /* ── Daycare room ── */
+    #daycare-room {
+      width: 100%; max-width: 600px;
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 8px 14px;
+      overflow-y: auto;
+      align-content: start;
+    }
+
+    /* Puppy card */
+    .puppy-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 12px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      position: relative;
+    }
+    .puppy-card:active { transform: scale(0.95); }
+    .puppy-card.needs-help { border-color: #f87171; animation: wiggle 1.2s infinite; }
+    .puppy-card.helped     { border-color: #4ade80; background: #f0fdf4; cursor: default; }
+
+    @keyframes wiggle {
+      0%,100% { transform: rotate(-2deg); }
+      50%      { transform: rotate(2deg);  }
+    }
+
+    .puppy-emoji { font-size: 40px; }
+    .puppy-name  { font-family:'Fredoka One',cursive; font-size:14px; color:#92400e; }
+
+    .puppy-status {
+      font-size: 11px; font-weight: 800;
+      padding: 3px 8px; border-radius: 12px;
+      text-align: center;
+    }
+    .status-needs  { background: #fee2e2; color: #b91c1c; }
+    .status-ok     { background: #dcfce7; color: #15803d; }
+
+    .condition-icon {
+      position: absolute; top: -8px; right: -8px;
+      font-size: 20px; background: #fff;
+      border-radius: 50%; padding: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* ── Treatment panel (bottom sheet) ── */
+    #treatment-panel {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff;
+      border-radius: 28px 28px 0 0;
+      padding: 20px 20px 32px;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.18);
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 40;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #treatment-panel.open { transform: translateY(0); }
+
+    #panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    #panel-puppy-info { display: flex; align-items: center; gap: 10px; }
+    #panel-emoji  { font-size: 36px; }
+    #panel-name   { font-family:'Fredoka One',cursive; font-size:20px; color:#92400e; }
+    #panel-issue  { font-size:13px; color:#666; }
+
+    #btn-close-panel {
+      background: #f3f4f6; border: none; border-radius: 50%;
+      width: 34px; height: 34px; font-size: 16px; cursor: pointer;
+    }
+
+    #panel-question {
+      background: #fff8e7; border-left: 4px solid #f59e0b;
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 14px; font-weight: 700; color: #78350f;
+      margin: 10px 0 14px;
+    }
+
+    #tools-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .tool-btn {
+      background: #fff8e7;
+      border: 2px solid #fde68a;
+      border-radius: 16px; padding: 12px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      cursor: pointer; transition: transform 0.12s, background 0.12s;
+    }
+    .tool-btn:hover  { background: #fef3c7; border-color: #f59e0b; }
+    .tool-btn:active { transform: scale(0.94); }
+    .tool-icon { font-size: 30px; }
+    .tool-name { font-size: 11px; font-weight: 800; color: #78350f; text-align: center; }
+
+    /* ── Overlays ── */
+    .overlay {
+      position: fixed; inset: 0; z-index: 60;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 30px;
+    }
+
+    /* Feedback toast */
+    #toast {
+      position: fixed; bottom: 120px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8); color: #fff;
+      padding: 10px 22px; border-radius: 20px;
+      font-size: 15px; font-weight: 700;
+      opacity: 0; transition: opacity 0.25s;
+      pointer-events: none; white-space: nowrap;
+      z-index: 50;
+    }
+
+    /* Level complete */
+    #levelcomplete {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    }
+    #levelcomplete.overlay { display: none; flex-direction: column; align-items: center; justify-content: center; }
+    #levelcomplete h2 { font-family:'Fredoka One',cursive; font-size:32px; color:#fff; margin-bottom:8px; }
+    #levelcomplete p  { font-size:15px; color:rgba(255,255,255,0.9); margin-bottom:24px; }
+    .btn-yellow {
+      padding: 14px 36px; border: none; border-radius: 22px;
+      font-family:'Fredoka One',cursive; font-size:20px;
+      background: #fff; color: #f59e0b; cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    /* Game over */
+    #gameover { background: linear-gradient(135deg, #fce7f3, #fef3c7); }
+    #gameover h2 { font-family:'Fredoka One',cursive; font-size:28px; color:#b45309; margin-bottom:8px; }
+    #gameover .sunny-msg { font-size:14px; color:#92400e; max-width:280px; margin-bottom:24px; line-height:1.5; }
+    .btn-amber {
+      padding: 14px 36px; border: none; border-radius: 22px;
+      font-family:'Fredoka One',cursive; font-size:20px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #fff; cursor: pointer;
+    }
+
+    /* Intro / start screen */
+    #intro {
+      position: fixed; inset: 0; z-index: 80;
+      background: linear-gradient(160deg, #fff8e7, #ffecd2);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 30px; text-align: center;
+    }
+    #intro .big-icon { font-size: 80px; margin-bottom: 12px; }
+    #intro h1 { font-family:'Fredoka One',cursive; font-size:34px; color:#92400e; margin-bottom:8px; }
+    #intro .story {
+      background: #fff; border-radius: 18px;
+      padding: 16px 20px; max-width: 320px;
+      font-size:14px; line-height:1.6; color:#555;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      margin-bottom: 24px; text-align: left;
+    }
+    #intro .story strong { color: #b45309; }
+    .btn-start-game {
+      padding: 16px 40px; border: none; border-radius: 26px;
+      font-family:'Fredoka One',cursive; font-size:22px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #fff; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(245,158,11,0.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Intro screen -->
+<div id="intro">
+  <div class="big-icon">🐾</div>
+  <h1>Sunny's Daycare</h1>
+  <div class="story">
+    <strong>Sunny</strong> owns the cutest doggy daycare in town — but she had a car accident and can't come in today. 🚗💥<br/><br/>
+    She's counting on <strong>YOU</strong> to take care of her puppies! Help them when they're hurt, sick, or just need some love — before the owners arrive to pick them up! 🐶❤️
+  </div>
+  <button class="btn-start-game" id="btn-start">Start my shift!</button>
+</div>
+
+<!-- Top bar -->
+<div id="topbar">
+  <a id="btn-home" href="../../index.html">🏠 Home</a>
+  <div id="level-badge">Level 1</div>
+  <div id="hearts">❤️❤️❤️</div>
+</div>
+
+<!-- Story reminder -->
+<div id="story-banner">
+  <div class="story-icon">🤕</div>
+  <p>Sunny's at the hospital — help all the puppies before their owners arrive!</p>
+</div>
+
+<!-- Timer -->
+<div id="timer-section">
+  <div id="timer-label">
+    <span>🚗 Owners arriving in...</span>
+    <span id="timer-text">60s</span>
+  </div>
+  <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+</div>
+
+<!-- Daycare room -->
+<div id="daycare-room"></div>
+
+<!-- Treatment panel -->
+<div id="treatment-panel">
+  <div id="panel-header">
+    <div id="panel-puppy-info">
+      <span id="panel-emoji">🐶</span>
+      <div>
+        <div id="panel-name">Biscuit</div>
+        <div id="panel-issue">has a hurt paw 🤕</div>
+      </div>
+    </div>
+    <button id="btn-close-panel">✕</button>
+  </div>
+  <div id="panel-question">What does this puppy need?</div>
+  <div id="tools-grid"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Level complete overlay -->
+<div id="levelcomplete" class="overlay">
+  <div style="font-size:64px">🎉</div>
+  <h2 id="lc-title">All puppies happy!</h2>
+  <p id="lc-sub">The owners arrived and everyone was healthy!</p>
+  <button class="btn-yellow" id="btn-nextlevel">Next Level →</button>
+</div>
+
+<!-- Game over overlay -->
+<div id="gameover" class="overlay">
+  <div style="font-size:60px">😢</div>
+  <h2>The owners weren't happy...</h2>
+  <div class="sunny-msg">
+    Sunny texted from the hospital: "Don't worry, try again! The puppies believe in you! 🐾💛"
+  </div>
+  <button class="btn-amber" id="btn-retry">Try Again!</button>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
